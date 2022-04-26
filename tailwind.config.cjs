@@ -1,13 +1,14 @@
 const forms = require("@tailwindcss/forms");
+const daisyui = require("daisyui");
 
 const config = {
-  content: ["./src/**/*.{html,js,svelte,ts}"],
+	content: ["./src/**/*.{html,js,svelte,ts}"],
 
-  theme: {
-    extend: {},
-  },
+	theme: {
+		extend: {},
+	},
 
-  plugins: [forms],
+	plugins: [forms, daisyui],
 };
 
 module.exports = config;
