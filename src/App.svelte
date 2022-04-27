@@ -1,24 +1,40 @@
 <script lang="ts">
   import {tick} from 'svelte';
-  import {scale,slide,fly} from 'svelte/transition';
+  import {scale,slide,fly,crossfade,fade} from 'svelte/transition';
+  import {flip} from 'svelte/animate';
+  const [send, receive] = crossfade({});
+
+  // spinner and button
   let rotate = false;
   let final = false;
   let adjust = false;
-  const allOptions = ['🍣', '🐟', '🦀', '🍕', '🥗', '🦞', '🦪', '🦐', '🦑', '🌶️']
-  let options = ['🍣', '🐟', '🦀', '🍕', '🥗', '🦞', '🦪', '🦐', '🦑', '🌶️'];
-  //['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
   let disabled = false;
 
-  $: n = options.length;
+  // array
+  let uid = 0;
+  const initialOptions = [
+    { id: uid++,  inPlay: true, icon: '🍣', text: 'Sushi'},
+    { id: uid++,  inPlay: true, icon: '🐟', text: 'Fish'},
+    { id: uid++,  inPlay: true, icon: '🦀', text: 'Crab'},
+    { id: uid++,  inPlay: true, icon: '🍕', text: 'Pizza'},
+    { id: uid++,  inPlay: true, icon: '🥗', text: 'Vegetarian'},
+    { id: uid++,  inPlay: true, icon: '🦞', text: 'Lobster'},
+    { id: uid++,  inPlay: true, icon: '🦪', text: 'Oyster'},
+    { id: uid++,  inPlay: false, icon: '🦐', text: 'Prawn'},
+    { id: uid++,  inPlay: false, icon: '🦑', text: 'Octopus'},
+    { id: uid++,  inPlay: false, icon: '🌶️', text: 'Mala'},
+    { id: uid++,  inPlay: false, icon: '🍔', text: 'Burger'},
+  ];
+  let options = [...initialOptions];
+
+  $: n = options.filter(t=>t.inPlay).length;
   $: selection = getRandomInt(1,n);
   $: if(selection) {
-    reset();
+    resetSpinner();
   }
   $: if(n) {
-    reset();
+    resetSpinner();
   }
-
-  const turns = 5.25;
 
   function spinWheel() {
     rotate = true;
@@ -26,7 +42,7 @@
     setTimeout(()=>{adjust=true;},500);
     setTimeout(()=>{disabled=false; final=true;},1000);
   }
-  function reset() {
+  function resetSpinner() {
     rotate = false;
     final = false;
     adjust = false;
@@ -37,12 +53,13 @@
 </script>
 
 <main>
+  <!--Spinner-->
   <section class="grid justify-items-center relative mt-8">
-    {#key options}
     <ul class:rotate class="rotate-{selection}-{n} background-{n}"
       in:scale={{start:1.1, opacity:1}}
     >
-      {#each options as option,i}
+      <!--Options-->
+      {#each options.filter(t=>t.inPlay) as option,i (option.id)}
         <li 
           class="position-{i+1}-{n}"
           class:text-6xl={n < 5}
@@ -50,30 +67,35 @@
           class:text-4xl={n>=8}
           on:click={()=>{
             if (!(rotate&&!final) && n>=3){
-              options = [...options.slice(0,i), ...options.slice(i+1)];
+              option.inPlay = false;
             }
           }}
+          in:receive={{key: option.id}}
+          out:send={{key: option.id}}
+          animate:flip
         >
-          <span class:adjust>{option}</span>
+          <span class:adjust>{option.icon}</span>
         </li>
       {/each}
     </ul>
-    {/key}
+    <!--Outcome-->
     {#if final}
-    <div 
-      class="absolute wheel-center p-2"          
-      class:text-6xl={n < 5}
-      class:text-5xl={n >= 5 && n < 8}
-      class:text-4xl={n>=8}
-      transition:scale
-    >
-      {options[selection-1]}
-    </div>
+      <div 
+        class="absolute wheel-center winner p-2"          
+        class:text-6xl={n < 5}
+        class:text-5xl={n >= 5 && n < 8}
+        class:text-4xl={n>=8}
+        transition:scale
+      >
+        {options.filter(t=>t.inPlay)[selection-1].icon}
+      </div>
     {/if}
     <div class="absolute arrow-head">
     </div>
   </section>
+  <!--Button and detailed outcome-->
   <section class="grid m-4">
+    <!--Button-->
     <div>
       <button 
         class="btn btn-primary"
@@ -85,6 +107,7 @@
             return
           }
           selection = getRandomInt(1,n);
+          resetSpinner();
           await tick();
           setTimeout(spinWheel,250)
         }}
@@ -92,26 +115,67 @@
         Spin the wheel
       </button>
     </div>
+    <!--Detailed outcome-->
     {#if final}
-      <div class="p-4 flex gap-4 items-center justify-center" in:slide={{delay: 400}}>
-        <div class="text-6xl">
-          {options[selection-1]}
-        </div>
-        <div
-          in:fly={{delay: 800, x: -50}}
-        >
-          Text
+      <div class="flex justify-center" in:slide={{delay: 400}}>
+        <div class="border border-black flex p-4 m-4 items-center justify-center gap-4 bg-yellow-100">
+          <div class="text-6xl">
+            {options.filter(t=>t.inPlay)[selection-1].icon}
+          </div>
+          <div
+            in:fly={{delay: 800, x: -50}}
+          >
+            {options.filter(t=>t.inPlay)[selection-1].text}
+          </div>
         </div>
       </div>
     {/if}
-
-    <button class="btn" on:click={()=>{options=allOptions.slice(0,n-1)}}>
-      -
-    </button>
-    <button class="btn" on:click={()=>{options=allOptions.slice(0,n+1)}}>
-      +
-    </button>
   </section>
+  <!--Extra Options-->
+  <section>
+  <div class="flex gap-2 flex-wrap m-4 justify-center">
+    {#each options.filter(t=>!t.inPlay) as option (option.id)}
+      <button 
+        class="btn btn-accent btn-sm"
+        class:disabled
+        {disabled}
+        on:click={()=>{
+          if (n<=9){
+            option.inPlay=true;
+          }
+        }}
+        in:receive={{key: option.id}}
+        out:send={{key: option.id}}
+        animate:flip
+      >
+        {option.icon} {option.text}
+      </button>
+    {/each}
+  </div>
+  </section>
+  <!--Reset-->
+  <button 
+    class="btn" 
+    on:click={()=>{
+      uid = 0;
+      options = [  
+        { id: uid++,  inPlay: true, icon: '🍣', text: 'Sushi'},
+        { id: uid++,  inPlay: true, icon: '🐟', text: 'Fish'},
+        { id: uid++,  inPlay: true, icon: '🦀', text: 'Crab'},
+        { id: uid++,  inPlay: true, icon: '🍕', text: 'Pizza'},
+        { id: uid++,  inPlay: true, icon: '🥗', text: 'Vegetarian'},
+        { id: uid++,  inPlay: true, icon: '🦞', text: 'Lobster'},
+        { id: uid++,  inPlay: true, icon: '🦪', text: 'Oyster'},
+        { id: uid++,  inPlay: true, icon: '🦐', text: 'Prawn'},
+        { id: uid++,  inPlay: true, icon: '🦑', text: 'Octopus'},
+        { id: uid++,  inPlay: false, icon: '🌶️', text: 'Mala'},
+        { id: uid++,  inPlay: false, icon: '🍔', text: 'Burger'},
+      ];
+      resetSpinner();
+    }}
+  >
+      Reset
+  </button>
 </main>
 
 <style>
@@ -148,6 +212,7 @@
 		display: grid; place-items: center; position: absolute; aspect-ratio: 1/1; padding: 0.25em;
 		box-sizing: border-box; 
 		border-radius: 50%;
+    cursor: pointer;
 	}
 
 
@@ -161,13 +226,14 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    border: 1px solid black;
-    background: #eeeeeeff;
+  }
+  .winner {
     animation-name: blinkingBG;
     animation-duration: 0.3s;
     animation-iteration-count: 5;
     animation-timing-function: ease-in-out;
-
+    background: #eeeeeeff;
+    border: 1px solid black;
   }
 
   .arrow-head {

@@ -18,8 +18,8 @@ html {
 	font-size: 21px;
 
 	--spin-time: 1s;
-	--spinner-width: min(80vw, 80vh);
-	--spinner-radius: min(40vw, 40vh);
+	--spinner-width: min(80vw, 60vh);
+	--spinner-radius: min(40vw, 30vh);
 
 	--cos-1-2: 1;
 	--cos-2-2: -1;
