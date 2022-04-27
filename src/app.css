@@ -12,6 +12,13 @@ html {
 	box-sizing: inherit;
 }
 
+body {
+	max-width: 100%;
+	min-height: 100vh;
+	overflow-x: hidden;
+	background: #eee;
+}
+
 :root {
 	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
 		Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
@@ -292,4 +299,14 @@ html {
 		hsla(324deg, 100%, 50%, 0.5) 342deg,
 		hsla(0deg, 100%, 50%, 0.5) 342deg
 	);
+}
+
+.spinner-button {
+	@apply inline-flex flex-shrink-0 cursor-pointer select-none flex-wrap items-center justify-center border-transparent text-center transition duration-200 ease-in-out rounded-btn;
+	@apply h-12 px-4 text-sm min-h-12;
+	@apply font-semibold uppercase no-underline;
+	line-height: 1em;
+}
+.spinner-button:hover {
+	@apply border-primary-focus bg-primary-focus;
 }
