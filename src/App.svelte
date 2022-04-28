@@ -2,8 +2,10 @@
   import {tick} from 'svelte';
   import {scale,slide,fly,crossfade,fade} from 'svelte/transition';
   import {flip} from 'svelte/animate';
-  const [send, receive] = crossfade({});
+  const [send, receive] = crossfade({fallback: scale});
   import {icons} from './icons';
+
+  const iconsArray = Object.keys(icons);
 
   // spinner and button
   let firstSpin = true;
@@ -14,7 +16,7 @@
   let disabled = false;
 
   // new addition
-  let selectedIcon = 'sushi';
+  let selectedIcon = iconsArray[getRandomInt(0,iconsArray.length-1)]
   let name = ""
   $: addDisabled = (name === "");
 
@@ -53,8 +55,8 @@
     rotate = true;
     disabled = true;
     setTimeout(()=>{adjust=true;},500);
-    setTimeout(()=>{disabled=false; final=true;},1000);
-    setTimeout(()=>{completed=true;},3500);
+    setTimeout(()=>{final=true;},1000);
+    setTimeout(()=>{disabled=false; completed=true;},3500);
   }
   function resetSpinner(resetFirstSpin=false) {
     firstSpin = resetFirstSpin ? true : firstSpin;
@@ -82,7 +84,11 @@
           class:text-5xl={n >= 5 && n < 8}
           class:text-4xl={n>=8}
           on:click={()=>{
-            if (!(rotate&&!final) && n>=3){
+            if (!disabled){
+              if (n<3){
+                const notInPlay = options.filter(t=>!t.inPlay)
+                notInPlay[getRandomInt(0,notInPlay.length-1)].inPlay = true;
+              }
               option.inPlay = false;
             }
           }}
@@ -90,7 +96,7 @@
           out:send={{key: option.id}}
           animate:flip
         >
-          <span class:adjust>{option.icon}</span>
+          <span title="{option.text}" class:adjust>{option.icon}</span>
         </li>
       {/each}
     </ul>
@@ -115,7 +121,7 @@
       </button>
     {:else if final && !completed}
       <div 
-        class="absolute wheel-center winner p-2 bg-yellow-100"          
+        class="absolute wheel-center winner p-2 bg-yellow-200 dark:bg-yellow-400"
         class:text-6xl={n < 5}
         class:text-5xl={n >= 5 && n < 8}
         class:text-4xl={n>=8}
@@ -150,12 +156,12 @@
     {#if final}
     <!--Detailed outcome-->
       <div class="flex justify-center" in:slide={{delay: 400}} out:slide>
-        <div class="border border-black flex p-4 m-4 items-center justify-center gap-4 bg-yellow-100 font-bold font-serif">
-          <div class="text-6xl">
+        <div class="border border-black flex p-4 m-4 items-center justify-center gap-4 bg-yellow-200 dark:bg-yellow-400 font-bold font-serif text-black">
+          <div class="text-6xl" in:fade={{delay:400}} out:slide>
             {options.filter(t=>t.inPlay)[selection-1].icon}
           </div>
           <div
-            in:fly={{delay: 800, x: -50}}
+            in:fly={{delay: 800, x: -50}} out:slide
           >
             {options.filter(t=>t.inPlay)[selection-1].text}
           </div>
@@ -165,16 +171,18 @@
   </section>
   <!--Extra Options-->
   <section>
-  <div class="flex gap-2 flex-wrap m-4 justify-center">
+  <div class="flex gap-2 flex-wrap m-4 justify-center max-w-md mx-auto">
     {#each options.filter(t=>!t.inPlay) as option (option.id)}
       <button 
         class="btn btn-accent btn-sm"
         class:disabled
         {disabled}
         on:click={()=>{
-          if (n<=9){
-            option.inPlay=true;
-          }
+          if (n>9){
+            const inPlay = options.filter(t=>t.inPlay)
+            inPlay[getRandomInt(0,inPlay.length-1)].inPlay = false;
+          } 
+          option.inPlay=true;
         }}
         in:receive={{key: option.id}}
         out:send={{key: option.id}}
@@ -187,24 +195,34 @@
   </section>
 </main>
 
-<section class="my-4 p-4 bg-gray-300 grid gap-4 justify-center">
+<section class="p-4 bg-gray-300 dark:bg-gray-700 grid gap-4 justify-center">
   <div class="flex justify-center">
     <button 
       class="btn btn-primary btn-sm"
       class:btn-disabled={addDisabled}
       on:click={()=>{
-        options = [...options, {id: uid++, inPlay: n<10, icon: icons[selectedIcon], text: name}];
-        name=""
+        if (n>9){
+          const inPlay = options.filter(t=>t.inPlay)
+          inPlay[getRandomInt(0,inPlay.length-1)].inPlay = false;
+        } 
+        options = [...options, {id: uid++, inPlay: true, icon: icons[selectedIcon], text: name}];
+        name="";
+        selectedIcon = iconsArray[getRandomInt(0,iconsArray.length-1)];
+        window.scrollTo({top: 0, behavior: 'smooth'});
       }}
     >
-      Add to {n>=10 ? 'options' : 'wheel'}
+      Add to wheel
     </button>
   </div>
-  <div class="flex justify-center">
-    <input bind:value={name} type="text" placeholder="Name" class="input input-bordered w-full max-w-xs">
-  </div>
+    <input 
+      bind:value={name}
+      type="text"
+      placeholder="Name"
+      class="input input-bordered w-full max-w-xs mx-auto input-primary"
+      class:input-error={name===''}
+    >
   <div class="flex flex-wrap justify-center max-w-md">
-    {#each Object.keys(icons) as iconName}
+    {#each iconsArray as iconName}
       <div
         class:bg-primary={iconName===selectedIcon}
         class="px-2 py-1 rounded-full cursor-pointer transition-colors duration-500"
@@ -217,7 +235,7 @@
 </section>
 
 <!--Reset-->
-<div class="flex justify-center pb-4">
+<div class="flex justify-center py-4 gap-4">
   <div>
     <button 
       class="btn btn-sm" 
@@ -226,10 +244,13 @@
           return {...item}
         });
         resetSpinner(true);
+        window.scrollTo({top: 0, behavior: 'smooth'});
       }}
     >
         Reset
-    </button> 
+    </button>
+    <button class="btn btn-sm">Options</button>
+    <button class="btn btn-sm">About</button>
   </div>
 </div>
   
