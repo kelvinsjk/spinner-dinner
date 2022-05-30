@@ -1,6 +1,8 @@
 <script lang="ts">
   import { options, userDefaultOptions } from '$lib/options/stores';
   import { defaultOptions } from '$lib/options/defaultOptions';
+
+  $: disabled = $options.length <= 2;
 </script>
 
 <svelte:head>
@@ -19,6 +21,8 @@
       </div>
       <div class:bg-gray-300={i%2===1} class:text-black={i%2===1} class="flex justify-center items-center py-2">
         <button class="btn btn-xs btn-outline btn-circle"
+          {disabled}
+          class:btn-disabled={disabled}
           on:click={()=>{
             let uid = i+1;
             const newOptions = [...$options.slice(0,i), ...$options.slice(i+1).map(t=>{return {...t, id:uid++}})];

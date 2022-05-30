@@ -22,13 +22,24 @@
   let selectedIcon = iconsArray[getRandomInt(0,iconsArray.length-1)]
   let name = ""
   $: addDisabled = (name === "");
-  $: n = $options.filter(t=>t.inPlay).length;
+  $: n = checkOptions($options)
   $: selection = getRandomInt(1,n);
   $: if(selection) {
     resetSpinner();
   }
   $: if(n) {
     resetSpinner(true);
+  }
+  function checkOptions(options): number {
+    if (options.filter(t=>t.inPlay).length >= 2) {
+      return options.filter(t=>t.inPlay).length;
+    }
+    let k = 0;
+    while (options.filter(t=>t.inPlay).length < 2){
+      options[k].inPlay = true;
+      k++;
+    }
+    return 2;
   }
 
   function spinWheel() {
@@ -68,6 +79,9 @@
             if (!disabled){
               if (n<3){
                 const notInPlay = $options.filter(t=>!t.inPlay)
+                if (notInPlay.length === 0){
+                  return
+                }
                 notInPlay[getRandomInt(0,notInPlay.length-1)].inPlay = true;
               }
               option.inPlay = false;
