@@ -6,7 +6,7 @@ export const defaultOptions = [
 	{ id: uid++, inPlay: true, icon: '🥗', text: 'Elemen' },
 	{ id: uid++, inPlay: true, icon: '🍔', text: 'Black Tap' },
 	{ id: uid++, inPlay: true, icon: icons.tomato, text: 'Hai Di Lao' },
-	{ id: uid++, inPlay: false, icon: '🦀', text: 'Crab' },
+	{ id: uid++, inPlay: true, icon: icons.chocolate, text: 'Green Tea Kit Kat' },
 	{ id: uid++, inPlay: false, icon: '🦪', text: 'Oyster' },
 	{ id: uid++, inPlay: false, icon: '🐟', text: 'Fish' },
 	{ id: uid++, inPlay: false, icon: '🦞', text: 'Lobster' },

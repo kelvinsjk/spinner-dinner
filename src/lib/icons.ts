@@ -36,4 +36,5 @@ export const icons = {
 	coffee: "☕",
 	bbt: "🧋",
 	cocktail: "🍸",
+	chocolate: "🍫"
 };
